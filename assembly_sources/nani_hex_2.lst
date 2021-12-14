@@ -1,0 +1,149 @@
+     1                                  ; nani.asm
+     2                                  [bits 32]
+     3                                  
+     4                                              org 0x08048000
+     5                                  
+     6                                  ehdr:
+     7 00000000 7F454C4601010100                    db 0x7F, "ELF", 1, 1, 1, 0
+     8 00000008 00<rept>                    times 8 db  0
+     9 00000010 0200                                dw  2
+    10 00000012 0300                                dw  3
+    11 00000014 01000000                            dd  1
+    12 00000018 [29020000]                          dd  nani_main
+    13 0000001C 34000000                            dd  phdr - $$
+    14 00000020 00000000                            dd  0
+    15 00000024 00000000                            dd  0
+    16 00000028 3400                                dw  ehdrsize
+    17 0000002A 2000                                dw  phdrsize
+    18 0000002C 0100                                dw  1
+    19 0000002E 0000                                dw  0
+    20 00000030 0000                                dw  0
+    21 00000032 0000                                dw  0
+    22                                  ehdrsize    equ $ - ehdr
+    23                                  
+    24                                  phdr:
+    25 00000034 01000000                            dd  1
+    26 00000038 00000000                            dd  0
+    27 0000003C 00800408                            dd  0x08048000
+    28 00000040 00800408                            dd  0x08048000
+    29 00000044 44020000                            dd  244h
+    30 00000048 44020000                            dd  244h
+    31 0000004C 07000000                            dd  7
+    32 00000050 00100000                            dd  1000h
+    33                                  phdrsize    equ $ - phdr
+    34                                  
+    35                                  filesize    equ $ - $$
+    36                                  
+    37                                  ; https://cs.lmu.edu/~ray/notes/x86assembly/
+    38 00000054 00000000<rept>          times 40h dd 0
+    39 00000154 00<rept>                times 3 db 0
+    40                                  
+    41                                  pos:
+    42 00000157 6854800408                  push    dword 0x08048054
+    43                                  
+    44                                  label:
+    45 0000015C 6858800408                  push    dword 0x08048058
+    46                                  
+    47                                  getchar:
+    48 00000161 6A00                        push    0
+    49 00000163 31DB                        xor     ebx,ebx
+    50 00000165 89E1                        mov     ecx,esp
+    51 00000167 42                          inc     edx
+    52 00000168 B803000000                  mov     eax,3
+    53 0000016D CD80                        int     80h
+    54 0000016F 85C0                        test    eax,eax
+    55 00000171 7402                        je      exit
+    56 00000173 58                          pop     eax
+    57 00000174 C3                          ret
+    58                                  
+    59                                  exit:
+    60 00000175 31C0                        xor     eax,eax
+    61 00000177 89C3                        mov     ebx,eax
+    62 00000179 40                          inc     eax
+    63 0000017A CD80                        int     80h
+    64                                  
+    65                                  gethex:
+    66 0000017C E8E0FFFFFF                  call    getchar
+    67 00000181 83F820                      cmp     eax,20h
+    68 00000184 7EF6                        jle     gethex
+    69 00000186 83F823                      cmp     eax,23h
+    70 00000189 750C                        jne     .l1
+    71                                  
+    72                                  .loop:
+    73 0000018B E8D1FFFFFF                  call    getchar
+    74 00000190 83F80A                      cmp     eax,0Ah
+    75 00000193 75F6                        jne     .loop
+    76 00000195 EBE5                        jmp     gethex
+    77                                  
+    78                                  .l1:
+    79 00000197 83F82E                      cmp     eax,2Eh
+    80 0000019A 751A                        jne     .l2
+    81 0000019C E8C0FFFFFF                  call    getchar
+    82 000001A1 25FF000000                  and     eax,0FFh
+    83 000001A6 05[5C010000]                add     eax,label
+    84 000001AB 8B18                        mov     ebx,[eax]
+    85 000001AD B8[57010000]                mov     eax,pos
+    86 000001B2 8918                        mov     [eax],ebx
+    87 000001B4 EBC6                        jmp     gethex
+    88                                  
+    89                                  .l2:
+    90 000001B6 83F830                      cmp     eax,30h
+    91 000001B9 7C09                        jl      .l3
+    92 000001BB 83F83A                      cmp     eax,3Ah
+    93 000001BE 7D04                        jge     .l3
+    94 000001C0 83E830                      sub     eax,30h
+    95 000001C3 C3                          ret
+    96                                  
+    97                                  .l3:
+    98 000001C4 83F861                      cmp     eax,61h
+    99 000001C7 7C09                        jl      .l4
+   100 000001C9 83F867                      cmp     eax,67h
+   101 000001CC 7D04                        jge     .l4
+   102 000001CE 83E857                      sub     eax,57h
+   103 000001D1 C3                          ret
+   104                                  
+   105                                  .l4:
+   106 000001D2 25FF000000                  and     eax,0FFh
+   107 000001D7 05[5C010000]                add     eax,label
+   108 000001DC 8B18                        mov     ebx,[eax]
+   109 000001DE A1[57010000]                mov     eax, dword [pos]
+   110 000001E3 83C004                      add     eax,4
+   111 000001E6 A3[57010000]                mov     dword [pos], eax
+   112 000001EB 29C3                        sub     ebx,eax
+   113 000001ED 89D8                        mov     eax,ebx
+   114 000001EF 50                          push    eax
+   115 000001F0 E823000000                  call    putchar
+   116 000001F5 58                          pop     eax
+   117 000001F6 C1F808                      sar     eax,8
+   118 000001F9 E81A000000                  call    putchar
+   119 000001FE 58                          pop     eax
+   120 000001FF C1F810                      sar     eax,10h
+   121 00000202 50                          push    eax
+   122 00000203 E810000000                  call    putchar
+   123 00000208 58                          pop     eax
+   124 00000209 C1F818                      sar     eax,18h
+   125 0000020C 50                          push    eax
+   126 0000020D E806000000                  call    putchar
+   127 00000212 58                          pop     eax
+   128 00000213 E964FFFFFF                  jmp     gethex
+   129                                  
+   130                                  putchar:
+   131 00000218 31DB                        xor     ebx,ebx
+   132 0000021A 43                          inc     ebx
+   133 0000021B 8D4C2404                    lea     ecx,[esp+4]
+   134 0000021F 89DA                        mov     edx,ebx
+   135 00000221 B804000000                  mov     eax,4
+   136 00000226 CD80                        int     80h
+   137 00000228 C3                          ret
+   138                                  
+   139                                  nani_main:
+   140 00000229 E84EFFFFFF                  call    gethex
+   141 0000022E C1E004                      shl     eax,4
+   142 00000231 50                          push    eax
+   143 00000232 E845FFFFFF                  call    gethex
+   144 00000237 010424                      add     [esp+4-4],eax
+   145 0000023A FF05[57010000]              inc     dword [pos]
+   146 00000240 E8D3FFFFFF                  call    putchar
+   147 00000245 58                          pop     eax
+   148 00000246 EBE1                        jmp     nani_main
+   149                                      
