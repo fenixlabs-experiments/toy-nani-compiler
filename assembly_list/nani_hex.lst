@@ -1,0 +1,95 @@
+     1                                  ; nani.asm
+     2                                  [bits 32]
+     3                                  
+     4                                              org 0x08048000
+     5                                  
+     6                                  ehdr:
+     7 00000000 7F454C4601010100                    db 0x7F, "ELF", 1, 1, 1, 0
+     8 00000008 00<rept>                    times 8 db  0
+     9 00000010 0200                                dw  2
+    10 00000012 0300                                dw  3
+    11 00000014 01000000                            dd  1
+    12 00000018 [54000000]                          dd  nani_main
+    13 0000001C 34000000                            dd  phdr - $$
+    14 00000020 00000000                            dd  0
+    15 00000024 00000000                            dd  0
+    16 00000028 3400                                dw  ehdrsize
+    17 0000002A 2000                                dw  phdrsize
+    18 0000002C 0100                                dw  1
+    19 0000002E 0000                                dw  0
+    20 00000030 0000                                dw  0
+    21 00000032 0000                                dw  0
+    22                                  ehdrsize    equ $ - ehdr
+    23                                  
+    24                                  phdr:
+    25 00000034 01000000                            dd  1
+    26 00000038 00000000                            dd  0
+    27 0000003C [00000000]                          dd  $$
+    28 00000040 [00000000]                          dd  $$
+    29 00000044 54000000                            dd  filesize
+    30 00000048 54000000                            dd  filesize
+    31 0000004C 05000000                            dd  5
+    32 00000050 00100000                            dd  0x1000
+    33                                  phdrsize    equ $ - phdr
+    34                                  
+    35                                  filesize    equ $ - $$
+    36                                  
+    37                                  nani_main:
+    38 00000054 E825000000                  call gethex
+    39 00000059 C1E004                      sal eax, 4
+    40 0000005C 50                          push eax
+    41 0000005D E81C000000                  call gethex
+    42 00000062 010424                      add [esp], eax
+    43 00000065 E803000000                  call putchar
+    44 0000006A 58                          pop eax
+    45 0000006B EBE7                        jmp nani_main
+    46                                  
+    47                                  putchar:
+    48 0000006D 31DB                        xor ebx, ebx
+    49 0000006F 43                          inc ebx
+    50 00000070 8D4C2404                    lea ecx, [esp+4]
+    51 00000074 89DA                        mov edx, ebx
+    52 00000076 B804000000                  mov eax, 4
+    53 0000007B CD80                        int 0x80
+    54 0000007D C3                          ret
+    55                                  
+    56                                  gethex:
+    57 0000007E E81F000000                  call getchar
+    58 00000083 83F823                      cmp eax, 35
+    59 00000086 750C                        jne .convhex
+    60                                  
+    61                                  .loop:
+    62 00000088 E815000000                  call getchar
+    63 0000008D 83F80A                      cmp eax, 10
+    64 00000090 75F6                        jne .loop
+    65 00000092 EBEA                        jmp gethex
+    66                                      
+    67                                  .convhex:
+    68 00000094 83E830                      sub eax, 48
+    69 00000097 7CE5                        jl gethex
+    70 00000099 83F830                      cmp eax, 48
+    71 0000009C 7C03                        jl .ret
+    72 0000009E 83E827                      sub eax, 39
+    73                                  
+    74                                  .ret:
+    75 000000A1 C3                          ret
+    76                                  
+    77                                  getchar:
+    78 000000A2 6A00                        push 0
+    79 000000A4 31DB                        xor ebx, ebx
+    80 000000A6 89E1                        mov ecx, esp
+    81 000000A8 89DA                        mov edx, ebx
+    82 000000AA 42                          inc edx
+    83 000000AB B803000000                  mov eax, 3
+    84 000000B0 CD80                        int 0x80
+    85 000000B2 85C0                        test eax, eax
+    86 000000B4 7402                        je exit
+    87 000000B6 58                          pop eax
+    88 000000B7 C3                          ret
+    89                                  
+    90                                  exit:
+    91 000000B8 31C0                        xor eax, eax
+    92 000000BA 89C3                        mov ebx, eax
+    93 000000BC 40                          inc eax
+    94 000000BD CD80                        int 0x80
+    95                                  

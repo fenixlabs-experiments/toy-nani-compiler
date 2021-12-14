@@ -1,0 +1,8 @@
+     1                                  ; nani.asm
+     2                                  [bits 32]
+     3                                  
+     4                                  global nani_main
+     5                                  section .text
+     6                                  nani_main:
+     7 00000000 B801000000                  mov eax, 1
+     8 00000005 CD80                        int 0x80
