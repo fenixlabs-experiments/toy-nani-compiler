@@ -1,0 +1,54 @@
+Intel 8088,8086
+
+* Each of the registers, AX, BX, CX and DX could be decomposed into 2 8-bit registers.
+** AX register could be decomposed into the AH (upper 8 bits of AX) and AL (lower 8 bits of AL) registers.
+* Support up to one megabyte of memory
+* Operate only in real mode
+* Each segment cannot be larger than 64K
+
+16-bit registers
+AX - Accumulator Register
+BX - Base Register
+CX - Count Register
+DX - Data Register
+SI - Source Index
+DI - Destination Index
+BP - Base Pointer
+SP - Stack Pointer
+
+* Segment registers
+CS - Code Segment
+DS - Data Segment
+SS - Stack Segment
+ES - Extra Segment
+
+* Instruction Pointer (IP) is used with the CS register to keep track of the address of the next instruction executed by the CPU
+* Normally, as an instruction is executed, IP is advanced to point to the next instruction in memory
+* FLAGS register stores important information about the results of a previous instruction  
+IP
+FLAGS
+
+Intel 80386
+
+* AX is the lower 16-bits of EAX, AL is the lower 8 bits of AX (and EAX)
+* 32-bit protected mode, access up to 4 gigabytes
+* Programs are divided into segments, but each segments can also be up to 4 gigabytes in size
+
+32-bit registers
+EAX
+EBX
+ECX
+EDX
+ESI
+EDI
+EBP
+ESP
+EIP
+EFLAGS
+
+16-bit registers (temporary segment regsiters like ES)
+FS - F Segment
+GS - G Segment
+
+8086 > word - 2bytes (16 bits)
+80386 > word - register size changed
